@@ -40,12 +40,4 @@ export async function getUserContext(): Promise<UserContext> {
   }
 }
 
-// Check if user is owner or manager
-export function canManage(role: string) {
-  return role === 'owner' || role === 'manager'
-}
-
-// Check if user is owner
-export function isOwner(role: string) {
-  return role === 'owner'
-}
+export { canManage, isOwner } from './role-utils'
