@@ -17,7 +17,7 @@
 - [ ] Run Section 5: Tighten INSERT policies (005)
 - [ ] Run Section 6: Extra policy — "users can read own membership"
 - [ ] Turn OFF "Confirm email" in Auth > Providers > Email
-- [ ] Delete test users / orphan rows from failed attempts
+- [x] Delete test users / orphan rows from failed attempts
 
 ### Test Registration Flow
 - [ ] /register — Step 1: Create account (email + password)

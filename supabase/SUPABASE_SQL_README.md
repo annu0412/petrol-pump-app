@@ -393,5 +393,27 @@ create policy "users can read own membership"
 Before testing registration, ensure:
 
 1. **Authentication > Sign In / Providers > Email**: Turn OFF "Confirm email"
-2. **Authentication > Users**: Delete any test users from failed attempts
-3. Clean up any orphaned rows in `organizations` / `org_members` tables
+2. **Authentication > Users**: Delete any test users from failed attempts (see Cleanup script below)
+3. Clean up any orphaned rows in `organizations` / `org_members` tables (see Cleanup script below)
+
+---
+
+## 7. Cleanup Script (`008_cleanup_orphans.sql`)
+
+Run this whenever you need to purge failed registration attempts or orphaned data.
+
+```sql
+-- 1. Remove organizations with no members
+DELETE FROM public.organizations
+WHERE id NOT IN (SELECT org_id FROM public.org_members);
+
+-- 2. Remove users who haven't completed registration (24h grace period)
+DELETE FROM auth.users
+WHERE id NOT IN (SELECT user_id FROM public.org_members)
+  AND created_at < now() - INTERVAL '24 hours';
+
+-- 3. Remove stale invitations (accepted, revoked, or expired)
+DELETE FROM public.invitations
+WHERE status IN ('accepted', 'revoked')
+   OR expires_at < now();
+```
