@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Mono:wght@400;500&family=Noto+Sans:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --hp-blue:#003087; --hp-light:#0052cc;
+  --hp-yellow:#ffd700; --hp-orange:#ff8b00;
+  --hp-green:#00875a; --hp-red:#de350b;
+}
+body { font-family:'Noto Sans',sans-serif; color:#172b4d; background:#f0f2f5; -webkit-font-smoothing:antialiased; }
+.font-display { font-family:'Rajdhani',sans-serif; }
+.font-mono    { font-family:'DM Mono',monospace; }
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#dfe1e6;border-radius:4px}
+
+.field-input {
+  @apply w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800 transition-all
+         focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white;
+}
+.field-input.auto { @apply bg-blue-50 border-blue-200 text-blue-800 font-semibold; font-family:'DM Mono',monospace; }
+.field-label { @apply block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1; }
+.card { @apply bg-white rounded-xl shadow-sm border border-gray-100; }
+.btn  { @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:opacity-50; }
+.btn-primary { @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 bg-[#003087] text-white hover:bg-[#0052cc] active:scale-95; }
+.btn-success { @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 bg-[#00875a] text-white hover:bg-[#006644] active:scale-95; }
+.btn-danger  { @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 bg-[#de350b] text-white hover:bg-red-700 active:scale-95; }
+.btn-outline { @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 bg-white border border-gray-200 text-gray-600 hover:border-[#003087] hover:text-[#003087] hover:bg-blue-50; }
+.btn-sm { @apply px-3 py-1.5 text-xs; }
+.stat-card { @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 relative overflow-hidden border-t-4; }
+.data-table { @apply w-full text-sm border-collapse; }
+.data-table thead th { @apply bg-[#003087] text-white px-3 py-2.5 text-left font-semibold text-xs uppercase tracking-wide whitespace-nowrap; }
+.data-table tbody tr { @apply border-b border-gray-100 hover:bg-blue-50/40 transition-colors; }
+.data-table tbody td { @apply px-3 py-2.5 whitespace-nowrap; }
+.data-table tbody .num { font-family:'DM Mono',monospace; @apply text-right; }
+.badge { @apply inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold; }
+.badge-blue   { @apply inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800; }
+.badge-green  { @apply inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800; }
+.badge-red    { @apply inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800; }
+.badge-amber  { @apply inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800; }
+.page-title { font-family:'Rajdhani',sans-serif; @apply text-2xl font-bold text-[#003087] mb-0.5; }
+.page-sub { @apply text-sm text-gray-500 mb-5; }
+.machine-block { @apply border border-gray-200 rounded-xl p-4 bg-gray-50/60; }
+.summary-panel { background:linear-gradient(135deg,#003087 0%,#0052cc 100%); @apply rounded-xl p-4 text-white; }
+.summary-row { @apply flex justify-between items-center py-1.5 border-b border-white/10 text-sm; }
+.summary-row:last-child { @apply border-0; }
+.bottom-nav { @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-stretch z-50; padding-bottom:env(safe-area-inset-bottom); }
+.bottom-nav-item { @apply flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-gray-400 text-xs font-medium transition-colors cursor-pointer; }
+.bottom-nav-item.active { @apply text-[#003087]; }
+.pb-nav { padding-bottom:calc(64px + env(safe-area-inset-bottom)); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.fade-up { animation:fadeUp 0.2s ease; }
