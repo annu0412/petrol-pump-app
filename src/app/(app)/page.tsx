@@ -182,7 +182,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ sta
 
       {/* RECENT ENTRIES */}
       <RecentDaysTable
-        initialSummaries={recentSummaries ?? []}
+        initialSummaries={summaries ?? []}
         orgId={ctx.orgId}
         isOwner={ctx.role === 'owner'}
       />

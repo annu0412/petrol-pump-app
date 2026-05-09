@@ -1,6 +1,7 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useSearchParams } from 'next/navigation'
 import { Machine, Employee } from '@/types'
 import { calcSaleLiters, calcSaleInr, fmtInr, fmtL, round } from '@/lib/calculations'
 import { useRole } from '@/lib/user-context'
@@ -17,10 +18,11 @@ const DEFAULT_ROW = (m: Machine): MachineRow => ({
   machine: m, readingOpen: '', readingClose: '', operatorId: '',
 })
 
-export default function MasterPage() {
+function MasterPageContent() {
   const role = useRole()
   const isOwner = role === 'owner'
   const today = new Date().toISOString().slice(0, 10)
+  const searchParams = useSearchParams()
 
   const [supabase] = useState(() => createClient())
   const [loading, setLoading] = useState(true)
@@ -37,7 +39,7 @@ export default function MasterPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [rows, setRows] = useState<MachineRow[]>([])
 
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().slice(0, 10))
   const [prevCash, setPrevCash] = useState('')
   const [cashReceived, setCashReceived] = useState('')
   const [hsdStockIn, setHsdStockIn] = useState('')
@@ -561,5 +563,13 @@ export default function MasterPage() {
         </button>
       )}
     </div>
+  )
+}
+
+export default function MasterPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center text-gray-500">Loading master entry...</div>}>
+      <MasterPageContent />
+    </Suspense>
   )
 }

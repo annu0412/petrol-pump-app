@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { DailySummary } from '@/types'
 import { fmtInr } from '@/lib/calculations'
-import { TrendingUp, Trash2 } from 'lucide-react'
+import { TrendingUp, Trash2, Edit } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   initialSummaries: DailySummary[]
@@ -17,6 +18,11 @@ export default function RecentDaysTable({ initialSummaries, orgId, isOwner }: Pr
   const [deleting, setDeleting] = useState<string | null>(null)
   const [confirmDate, setConfirmDate] = useState<string | null>(null)
   const [expTotals, setExpTotals] = useState<Record<string, number>>({})
+  const router = useRouter()
+
+  useEffect(() => {
+    setSummaries(initialSummaries)
+  }, [initialSummaries])
 
   useEffect(() => {
     const loadExpenses = async () => {
@@ -50,7 +56,7 @@ export default function RecentDaysTable({ initialSummaries, orgId, isOwner }: Pr
     <div className="card mb-4">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <span className="font-display font-bold text-[#003087] text-base flex items-center gap-2">
-          <TrendingUp size={16} /> Recent Days
+          <TrendingUp size={16} /> Entries for Selected Period
         </span>
         <a href="/history" className="text-xs text-blue-600 hover:underline">View all →</a>
       </div>
@@ -60,15 +66,20 @@ export default function RecentDaysTable({ initialSummaries, orgId, isOwner }: Pr
             <tr>
               <th>Date</th>
               <th>Total Sale</th>
+              <th>Digital</th>
               <th>Expenses</th>
+              <th>Credit</th>
+              <th>Cash Rcvd</th>
+              <th>Bank Dep</th>
+              <th>Genset</th>
               <th>Cash In Hand</th>
-              {isOwner && <th></th>}
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {summaries.length === 0 && (
               <tr>
-                <td colSpan={isOwner ? 5 : 4} className="text-center py-6 text-gray-400 text-sm">
+                <td colSpan={10} className="text-center py-6 text-gray-400 text-sm">
                   No entries yet — start with Master Entry
                 </td>
               </tr>
@@ -79,33 +90,49 @@ export default function RecentDaysTable({ initialSummaries, orgId, isOwner }: Pr
                   {new Date(s.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                 </td>
                 <td className="num font-semibold text-[#003087]">{fmtInr(s.total_sale_inr)}</td>
+                <td className="num text-blue-600">{fmtInr(s.total_digital)}</td>
                 <td className="num text-amber-700">{fmtInr(expTotals[s.date] ?? s.total_expense)}</td>
+                <td className="num text-red-600">{fmtInr(s.total_credit)}</td>
+                <td className="num font-bold text-emerald-700">{fmtInr(s.cash_received)}</td>
+                <td className="num font-bold text-gray-600">{fmtInr(s.bank_deposit)}</td>
+                <td className="num font-bold text-gray-800">{s.genset_reading || '–'}</td>
                 <td className="num font-bold text-emerald-700">{fmtInr(s.cash_in_hand)}</td>
-                {isOwner && (
-                  <td className="text-right pr-3">
-                    {confirmDate === s.date ? (
-                      <div className="flex items-center justify-end gap-1">
+                <td className="text-right pr-3">
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => router.push(`/master?date=${s.date}`)}
+                      className="p-1.5 rounded text-blue-500 hover:bg-blue-50 transition-colors"
+                      title="Edit Entry"
+                    >
+                      <Edit size={13} />
+                    </button>
+                    {isOwner && (
+                      confirmDate === s.date ? (
+                        <>
+                          <button
+                            onClick={() => handleConfirmDelete(s.date)}
+                            className="text-[10px] px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition-colors font-semibold">
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => setConfirmDate(null)}
+                            className="text-[10px] px-2 py-1 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => handleConfirmDelete(s.date)}
-                          className="text-[10px] px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition-colors font-semibold">
-                          Delete
+                          onClick={() => setConfirmDate(s.date)}
+                          disabled={deleting !== null}
+                          className="p-1.5 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Delete Entry"
+                        >
+                          <Trash2 size={13} />
                         </button>
-                        <button
-                          onClick={() => setConfirmDate(null)}
-                          className="text-[10px] px-2 py-1 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setConfirmDate(s.date)}
-                        disabled={deleting !== null}
-                        className="p-1.5 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
-                        <Trash2 size={13} />
-                      </button>
+                      )
                     )}
-                  </td>
-                )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
