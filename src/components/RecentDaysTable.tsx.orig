@@ -26,10 +26,7 @@ export default function RecentDaysTable({ initialSummaries, orgId, isOwner }: Pr
 
   useEffect(() => {
     const loadExpenses = async () => {
-      if (summaries.length === 0) {
-        setExpTotals({})
-        return
-      }
+      if (summaries.length === 0) return
       const dates = summaries.map(s => s.date)
       const { data } = await supabase
         .from('expenses')
