@@ -12,7 +12,9 @@ interface Preview {
   valid: boolean
 }
 
-export default function JoinPage() {
+import { Suspense } from 'react'
+
+function JoinPageContent() {
   const params = useSearchParams()
   const router = useRouter()
   const token = params.get('token') ?? ''
@@ -173,5 +175,13 @@ export default function JoinPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader size={24} className="animate-spin text-gray-400" /></div>}>
+      <JoinPageContent />
+    </Suspense>
   )
 }

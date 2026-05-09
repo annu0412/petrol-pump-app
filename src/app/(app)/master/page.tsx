@@ -29,8 +29,10 @@ export default function MasterPage() {
   const [error, setError] = useState('')
 
   const [orgId, setOrgId] = useState('')
-  const [hsdRate, setHsdRate] = useState(87.49)
-  const [msRate, setMsRate] = useState(94.44)
+  const [hsdRate, setHsdRate] = useState('')
+  const [msRate, setMsRate] = useState('')
+  const [orgHsdRate, setOrgHsdRate] = useState(87.49)
+  const [orgMsRate, setOrgMsRate] = useState(94.44)
   const [machines, setMachines] = useState<Machine[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [rows, setRows] = useState<MachineRow[]>([])
@@ -71,8 +73,8 @@ export default function MasterPage() {
 
       const org = member.organizations as any
       setOrgId(member.org_id)
-      setHsdRate(org.hsd_rate)
-      setMsRate(org.ms_rate)
+      setOrgHsdRate(org.hsd_rate)
+      setOrgMsRate(org.ms_rate)
 
       const { data: mach } = await supabase
         .from('machines')
@@ -95,13 +97,66 @@ export default function MasterPage() {
     init()
   }, [])
 
-  // ── Load data for selected date ──
-  useEffect(() => {
-    if (!orgId || !date || machines.length === 0) return
-    loadDateData(orgId, date, machines)
-  }, [orgId, date, machines])
+  const loadDateData = useCallback(async (org: string, d: string, machs: Machine[]) => {
+    // Determine rates for the selected date
+    let selectedHsdRate = String(orgHsdRate)
+    let selectedMsRate = String(orgMsRate)
 
-  const loadDateData = async (org: string, d: string, machs: Machine[]) => {
+    // Check if there are entries on the selected date
+    const { data: dateEntries } = await supabase
+      .from('master_entries')
+      .select('fuel_rate, machines(fuel_type)')
+      .eq('org_id', org)
+      .eq('date', d)
+
+    if (dateEntries && dateEntries.length > 0) {
+      const hsdEntry = dateEntries.find((e: any) => e.machines?.fuel_type === 'HSD')
+      const msEntry = dateEntries.find((e: any) => e.machines?.fuel_type === 'MS')
+      if (hsdEntry) selectedHsdRate = String(hsdEntry.fuel_rate)
+      if (msEntry) selectedMsRate = String(msEntry.fuel_rate)
+    } else {
+      // If no entries for the date, find the most recent entries before this date
+      const { data: recentHsdEntry } = await supabase
+        .from('master_entries')
+        .select('fuel_rate')
+        .eq('org_id', org)
+        .lt('date', d)
+        .eq('machines.fuel_type', 'HSD')
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      // The above join might not work as intended in PostgREST for ordering,
+      // safer to fetch recent entry, but we need fuel type.
+      // Let's do a simpler approach: get most recent date with entries.
+      const { data: recentDateData } = await supabase
+        .from('master_entries')
+        .select('date')
+        .eq('org_id', org)
+        .lt('date', d)
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (recentDateData) {
+        const { data: recentEntries } = await supabase
+          .from('master_entries')
+          .select('fuel_rate, machines(fuel_type)')
+          .eq('org_id', org)
+          .eq('date', recentDateData.date)
+
+        if (recentEntries) {
+          const hsdEntry = recentEntries.find((e: any) => e.machines?.fuel_type === 'HSD')
+          const msEntry = recentEntries.find((e: any) => e.machines?.fuel_type === 'MS')
+          if (hsdEntry) selectedHsdRate = String(hsdEntry.fuel_rate)
+          if (msEntry) selectedMsRate = String(msEntry.fuel_rate)
+        }
+      }
+    }
+
+    setHsdRate(selectedHsdRate)
+    setMsRate(selectedMsRate)
+
     // 1. Fetch existing entries for this date
     const { data: entries } = await supabase
       .from('master_entries')
@@ -196,7 +251,13 @@ export default function MasterPage() {
       setNotes('')
       setPrevCash(prevSummary ? String(prevSummary.cash_in_hand) : '')
     }
-  }
+  }, [supabase, orgHsdRate, orgMsRate])
+
+  // ── Load data for selected date ──
+  useEffect(() => {
+    if (!orgId || !date || machines.length === 0) return
+    loadDateData(orgId, date, machines)
+  }, [orgId, date, machines, loadDateData])
 
   // ── Fetch daily expense + credit for selected date ──
   useEffect(() => {
@@ -220,7 +281,7 @@ export default function MasterPage() {
   const canEdit = isOwner || date === today
 
   const rowCalcs = rows.map(r => {
-    const rate = r.machine.fuel_type === 'MS' ? msRate : hsdRate
+    const rate = r.machine.fuel_type === 'MS' ? n(msRate) : n(hsdRate)
     const liters = calcSaleLiters(n(r.readingOpen), n(r.readingClose))
     const inr = calcSaleInr(liters, rate)
     return { liters, inr }
@@ -238,7 +299,7 @@ export default function MasterPage() {
     const validRows = rows.filter(r => r.readingOpen && r.readingClose)
 
     const entryRows = validRows.map((r, idx) => {
-      const rate = r.machine.fuel_type === 'MS' ? msRate : hsdRate
+      const rate = r.machine.fuel_type === 'MS' ? n(msRate) : n(hsdRate)
       const isFirst = idx === 0
       return {
         org_id: orgId,
@@ -332,8 +393,12 @@ export default function MasterPage() {
             <input className="field-input" type="number" placeholder="0" value={genset} onChange={e => setGenset(e.target.value)} disabled={!canEdit} />
           </div>
           <div>
-            <label className="field-label">Rates: HSD ₹{hsdRate} / MS ₹{msRate}</label>
-            <div className="field-input auto text-xs py-2.5">Auto-loaded from settings</div>
+            <label className="field-label">HSD Rate (₹)</label>
+            <input className="field-input" type="number" step="0.01" placeholder="0.00" value={hsdRate} onChange={e => setHsdRate(e.target.value)} disabled={!canEdit} />
+          </div>
+          <div>
+            <label className="field-label">MS Rate (₹)</label>
+            <input className="field-input" type="number" step="0.01" placeholder="0.00" value={msRate} onChange={e => setMsRate(e.target.value)} disabled={!canEdit} />
           </div>
         </div>
       </div>
