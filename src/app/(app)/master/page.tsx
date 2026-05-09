@@ -263,8 +263,10 @@ export default function MasterPage() {
   useEffect(() => {
     if (!orgId || !date) return
     const fetchDayTotals = async () => {
-      const { data: exp } = await supabase.from('expenses').select('amount').eq('org_id', orgId).eq('date', date)
-      const { data: cred } = await supabase.from('credit_entries').select('amount, entry_type').eq('org_id', orgId).eq('date', date)
+      const [{ data: exp }, { data: cred }] = await Promise.all([
+        supabase.from('expenses').select('amount').eq('org_id', orgId).eq('date', date),
+        supabase.from('credit_entries').select('amount, entry_type').eq('org_id', orgId).eq('date', date)
+      ])
       setDayExpense((exp ?? []).reduce((s, e) => s + parseFloat(e.amount), 0))
       setDayCredit((cred ?? []).filter(c => c.entry_type === 'sale').reduce((s, c) => s + parseFloat(c.amount), 0))
     }
