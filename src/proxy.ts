@@ -1,8 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
+
+  const redirectWithCookies = (path: string) => {
+    const redirectResponse = NextResponse.redirect(new URL(path, request.url))
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie)
+    })
+    return redirectResponse
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,11 +36,11 @@ export async function middleware(request: NextRequest) {
                      request.nextUrl.pathname.startsWith('/join')
 
   if (!user && !isAuthPage) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return redirectWithCookies('/login')
   }
 
   if (user && request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/', request.url))
+    return redirectWithCookies('/')
   }
 
   return supabaseResponse
