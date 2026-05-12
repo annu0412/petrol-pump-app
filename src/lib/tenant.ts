@@ -10,22 +10,28 @@ export async function getUserContext(): Promise<UserContext> {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) redirect('/login')
 
-    // Use the RPC to safely bypass RLS issues without needing the admin client
     const { data: member, error: memberError } = await supabase
-      .rpc('get_my_context')
+      .from('org_members')
+      .select('org_id, role, organizations(name, hsd_rate, ms_rate)')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
       .single()
 
-    if (memberError || !member) redirect('/register')
+    if (memberError && memberError.code !== 'PGRST116') {
+      throw new Error(`DB Error: ${memberError.message}`);
+    }
 
-    const typedMember = member as any
+    if (!member) redirect('/register')
+
+    const org = member.organizations as any
 
     return {
       userId: user.id,
-      orgId: typedMember.org_id,
-      orgName: typedMember.org_name,
-      role: typedMember.role,
-      hsdRate: typedMember.hsd_rate,
-      msRate: typedMember.ms_rate,
+      orgId: member.org_id,
+      orgName: org.name,
+      role: member.role,
+      hsdRate: org.hsd_rate,
+      msRate: org.ms_rate,
     }
   } catch (e: any) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
