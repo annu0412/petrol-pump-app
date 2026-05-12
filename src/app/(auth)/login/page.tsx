@@ -1,13 +1,24 @@
 'use client'
-import { useState } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+function LoginForm() {
   const [supabase] = useState(() => createClient())
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const errParam = searchParams.get('error')
+    if (errParam && errParam !== 'true') {
+      setError(errParam)
+    } else if (errParam === 'true') {
+      setError('An unknown server error occurred.')
+    }
+  }, [searchParams])
 
   const handleLogin = async () => {
     if (!email || !password) { setError('Please enter email and password'); return }
@@ -22,6 +33,43 @@ export default function LoginPage() {
     }
   }
 
+  return (
+    <>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div>
+          <label className="field-label">Email</label>
+          <input className="field-input" type="email" placeholder="you@example.com"
+            value={email} onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+        </div>
+        <div>
+          <label className="field-label">Password</label>
+          <input className="field-input" type="password" placeholder="••••••••"
+            value={password} onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+        </div>
+        <button className="btn-primary w-full justify-center" onClick={handleLogin} disabled={loading}>
+          {loading ? 'Signing in…' : 'Sign in →'}
+        </button>
+      </div>
+
+      <div className="mt-4 text-center text-sm text-gray-500">
+        New pump owner?{' '}
+        <a href="/register" className="text-[#003087] font-semibold hover:underline">
+          Register here
+        </a>
+      </div>
+    </>
+  )
+}
+
+export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#003087] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
@@ -39,37 +87,9 @@ export default function LoginPage() {
         {/* Card */}
         <div className="card p-6">
           <h2 className="font-display text-xl font-bold text-[#003087] mb-5">Sign in</h2>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label className="field-label">Email</label>
-              <input className="field-input" type="email" placeholder="you@example.com"
-                value={email} onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()} />
-            </div>
-            <div>
-              <label className="field-label">Password</label>
-              <input className="field-input" type="password" placeholder="••••••••"
-                value={password} onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()} />
-            </div>
-            <button className="btn-primary w-full justify-center" onClick={handleLogin} disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign in →'}
-            </button>
-          </div>
-
-          <div className="mt-4 text-center text-sm text-gray-500">
-            New pump owner?{' '}
-            <a href="/register" className="text-[#003087] font-semibold hover:underline">
-              Register here
-            </a>
-          </div>
+          <Suspense fallback={<div className="text-sm text-gray-500">Loading form...</div>}>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </div>
