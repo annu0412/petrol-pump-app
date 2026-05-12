@@ -34,9 +34,10 @@ export async function getUserContext(): Promise<UserContext> {
       hsdRate: org.hsd_rate,
       msRate: org.ms_rate,
     }
-  } catch (e) {
+  } catch (e: any) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
-    redirect('/login?error=true')
+    const msg = e?.message || 'Server Error'
+    redirect(`/login?error=${encodeURIComponent(msg)}`)
   }
 }
 
