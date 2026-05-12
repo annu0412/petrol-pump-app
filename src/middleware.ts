@@ -40,6 +40,9 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && request.nextUrl.pathname.startsWith('/login')) {
+    if (request.nextUrl.searchParams.has('error')) {
+      return supabaseResponse
+    }
     return redirectWithCookies('/')
   }
 
