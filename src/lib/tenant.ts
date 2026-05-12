@@ -36,7 +36,7 @@ export async function getUserContext(): Promise<UserContext> {
     }
   } catch (e) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
-    redirect('/login')
+    redirect('/login?error=true')
   }
 }
 
