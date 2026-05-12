@@ -1,5 +1,4 @@
 import { createServerSupabaseClient } from './supabase-server'
-import { createAdminClient } from './supabase-admin'
 import { UserContext } from '@/types'
 import { redirect } from 'next/navigation'
 
@@ -11,28 +10,22 @@ export async function getUserContext(): Promise<UserContext> {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) redirect('/login')
 
-    // Use the admin client so the org lookup is not affected by RLS/JWT
-    // propagation issues in the Next.js dev server over LAN.
-    // The user identity is already verified above via getUser().
-    const admin = createAdminClient()
-    const { data: member, error: memberError } = await admin
-      .from('org_members')
-      .select('org_id, role, organizations(name, hsd_rate, ms_rate)')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
+    // Use the RPC to safely bypass RLS issues without needing the admin client
+    const { data: member, error: memberError } = await supabase
+      .rpc('get_my_context')
       .single()
 
     if (memberError || !member) redirect('/register')
 
-    const org = member.organizations as any
+    const typedMember = member as any
 
     return {
       userId: user.id,
-      orgId: member.org_id,
-      orgName: org.name,
-      role: member.role,
-      hsdRate: org.hsd_rate,
-      msRate: org.ms_rate,
+      orgId: typedMember.org_id,
+      orgName: typedMember.org_name,
+      role: typedMember.role,
+      hsdRate: typedMember.hsd_rate,
+      msRate: typedMember.ms_rate,
     }
   } catch (e: any) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
