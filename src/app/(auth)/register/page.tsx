@@ -73,6 +73,11 @@ export default function RegisterPage() {
     setLoading(false); next()
   }
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
   // ── STEP 2: Create org (uses security definer function to bypass RLS) ──
   const handlePump = async () => {
     setLoading(true); setError('')
@@ -134,7 +139,15 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg">
 
         {/* Header */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 relative">
+          {step !== 'account' && step !== 'done' && (
+            <button
+              onClick={handleSignOut}
+              className="absolute right-0 top-0 text-sm text-blue-200 hover:text-white underline"
+            >
+              Sign out
+            </button>
+          )}
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-3"
                style={{background:'linear-gradient(135deg,#ffd700,#ff8b00)'}}>
             <span className="font-display font-bold text-xl text-[#003087]">HP</span>
