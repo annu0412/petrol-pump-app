@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRole } from '@/lib/user-context'
@@ -90,7 +92,7 @@ export default function MembersPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
-      <div className="text-gray-400 text-sm">Loading…</div>
+      <FuelLoading size={24} text="Loading…" textClassName="text-gray-400 text-sm" />
     </div>
   )
 

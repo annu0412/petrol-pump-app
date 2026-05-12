@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Machine, Employee } from '@/types'
@@ -357,7 +359,7 @@ export default function MasterPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
-      <div className="text-gray-400 text-sm">Loading machines…</div>
+      <FuelLoading size={24} text="Loading machines…" textClassName="text-gray-400 text-sm" />
     </div>
   )
 

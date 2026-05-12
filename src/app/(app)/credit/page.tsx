@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Customer, CreditEntry } from '@/types'
@@ -121,7 +123,7 @@ export default function CreditPage() {
   const filteredEntries = selectedCustomer === 'all' ? entries
     : entries.filter(e => e.customer_id === selectedCustomer)
 
-  if (loading) return <div className="flex items-center justify-center py-20"><div className="text-gray-400 text-sm">Loading…</div></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><FuelLoading size={24} text="Loading…" textClassName="text-gray-400 text-sm" /></div>
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'entry', label: '+ New Entry' },

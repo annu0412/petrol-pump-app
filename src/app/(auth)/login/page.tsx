@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useState, Suspense, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useSearchParams } from 'next/navigation'
@@ -55,7 +57,7 @@ function LoginForm() {
             onKeyDown={e => e.key === 'Enter' && handleLogin()} />
         </div>
         <button className="btn-primary w-full justify-center" onClick={handleLogin} disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign in →'}
+          {loading ? <FuelLoading size={16} text="Signing in…" textClassName="text-white" /> : 'Sign in →'}
         </button>
       </div>
 

@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Customer } from '@/types'
@@ -56,7 +58,7 @@ export default function CustomersPage() {
     setCustomers(prev => prev.filter(c => c.id !== id))
   }
 
-  if (loading) return <div className="flex items-center justify-center py-20"><div className="text-gray-400 text-sm">Loading…</div></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><FuelLoading size={24} text="Loading…" textClassName="text-gray-400 text-sm" /></div>
 
   return (
     <div className="fade-up">
