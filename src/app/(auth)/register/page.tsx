@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
@@ -50,6 +50,14 @@ export default function RegisterPage() {
   // Saved IDs after DB insert
   const [orgId, setOrgId] = useState('')
   const [userId, setUserId] = useState('')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setStep('pump')
+      }
+    })
+  }, [supabase])
 
   const stepIdx = STEPS.indexOf(step)
 
