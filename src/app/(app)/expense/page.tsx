@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Expense, EXPENSE_CATEGORIES } from '@/types'
@@ -87,7 +89,7 @@ export default function ExpensePage() {
     'Tanker Inaam': '#9a3412', Others: '#374151',
   }
 
-  if (loading) return <div className="flex items-center justify-center py-20"><div className="text-gray-400 text-sm">Loading…</div></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><FuelLoading size={24} text="Loading…" textClassName="text-gray-400 text-sm" /></div>
 
   return (
     <div className="fade-up">

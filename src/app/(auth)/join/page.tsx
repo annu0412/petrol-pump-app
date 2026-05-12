@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -90,7 +92,7 @@ function JoinPageContent() {
 
   if (loadingPreview) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Loader size={24} className="animate-spin text-gray-400" />
+      <FuelLoading size={24} text="Loading preview…" textClassName="text-gray-400 text-sm" />
     </div>
   )
 
@@ -180,7 +182,7 @@ function JoinPageContent() {
 
 export default function JoinPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader size={24} className="animate-spin text-gray-400" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><FuelLoading size={24} text="Loading preview…" textClassName="text-gray-400 text-sm" /></div>}>
       <JoinPageContent />
     </Suspense>
   )

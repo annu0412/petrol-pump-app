@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Settings, Wrench, Users, UserCircle, ShieldCheck } from 'lucide-react'
@@ -60,7 +62,7 @@ export default function OrgSettingsPage() {
     { href: '/settings/members',   icon: ShieldCheck,  label: 'Members',   desc: 'User access & roles' },
   ]
 
-  if (loading) return <div className="flex items-center justify-center py-20"><div className="text-gray-400 text-sm">Loading…</div></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><FuelLoading size={24} text="Loading…" textClassName="text-gray-400 text-sm" /></div>
 
   return (
     <div className="fade-up">

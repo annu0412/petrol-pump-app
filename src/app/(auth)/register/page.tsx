@@ -1,4 +1,6 @@
+
 'use client'
+import FuelLoading from '@/components/FuelLoading'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -184,7 +186,7 @@ export default function RegisterPage() {
                   <input className="field-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters" /></div>
               </div>
               <button className="btn-primary w-full justify-center mt-5" onClick={handleAccount} disabled={loading || !email || !password}>
-                {loading ? 'Creating…' : 'Continue →'}
+                {loading ? <FuelLoading size={16} text="Creating…" textClassName="text-white" /> : 'Continue →'}
               </button>
               <div className="mt-3 text-center text-sm text-gray-500">
                 Already registered? <a href="/login" className="text-[#003087] font-semibold hover:underline">Sign in</a>
@@ -213,7 +215,7 @@ export default function RegisterPage() {
               <div className="flex gap-2 mt-5">
                 <button className="btn-outline" onClick={prev}>← Back</button>
                 <button className="btn-primary flex-1 justify-center" onClick={handlePump} disabled={loading || !pumpName}>
-                  {loading ? 'Saving…' : 'Continue →'}
+                  {loading ? <FuelLoading size={16} text="Saving…" textClassName="text-white" /> : 'Continue →'}
                 </button>
               </div>
             </div>
@@ -250,7 +252,7 @@ export default function RegisterPage() {
               <div className="flex gap-2 mt-4">
                 <button className="btn-outline" onClick={prev}>← Back</button>
                 <button className="btn-primary flex-1 justify-center" onClick={handleMachines} disabled={loading}>
-                  {loading ? 'Saving…' : 'Continue →'}
+                  {loading ? <FuelLoading size={16} text="Saving…" textClassName="text-white" /> : 'Continue →'}
                 </button>
               </div>
             </div>
@@ -285,7 +287,7 @@ export default function RegisterPage() {
               <div className="flex gap-2 mt-4">
                 <button className="btn-outline" onClick={prev}>← Back</button>
                 <button className="btn-primary flex-1 justify-center" onClick={handleEmployees} disabled={loading}>
-                  {loading ? 'Saving…' : 'Continue →'}
+                  {loading ? <FuelLoading size={16} text="Saving…" textClassName="text-white" /> : 'Continue →'}
                 </button>
               </div>
             </div>
@@ -310,7 +312,7 @@ export default function RegisterPage() {
               <div className="flex gap-2 mt-4">
                 <button className="btn-outline" onClick={prev}>← Back</button>
                 <button className="btn-primary flex-1 justify-center" onClick={handleCustomers} disabled={loading}>
-                  {loading ? 'Saving…' : 'Finish Setup →'}
+                  {loading ? <FuelLoading size={16} text="Saving…" textClassName="text-white" /> : 'Finish Setup →'}
                 </button>
               </div>
             </div>
