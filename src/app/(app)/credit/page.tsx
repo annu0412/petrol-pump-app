@@ -102,6 +102,8 @@ export function CreditForm({ inlineDate, onSaved }: { inlineDate?: string, onSav
       setForm(f => ({ ...f, liters: '', amount: '', vehicleNo: '', receiptNo: '', defCash: '', notes: '' }))
       await supabase.rpc('recalculate_ledger', { p_org_id: orgId, p_start_date: form.date })
       if (onSaved) onSaved()
+      await supabase.rpc('recalculate_ledger', { p_org_id: orgId, p_start_date: form.date })
+      if (onSaved) onSaved()
     }
     setSaving(false)
   }
