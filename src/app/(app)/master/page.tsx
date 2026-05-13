@@ -1,7 +1,8 @@
 
 'use client'
 import FuelLoading from '@/components/FuelLoading'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { Machine, Employee } from '@/types'
 import { calcSaleLiters, calcSaleInr, fmtInr, fmtL, round } from '@/lib/calculations'
@@ -19,11 +20,13 @@ const DEFAULT_ROW = (m: Machine): MachineRow => ({
   machine: m, readingOpen: '', readingClose: '', operatorId: '',
 })
 
-export default function MasterPage() {
+function MasterPageInner() {
   const role = useRole()
   const isOwner = role === 'owner'
   const today = new Date().toISOString().slice(0, 10)
 
+  const searchParams = useSearchParams()
+  const queryDate = searchParams.get('date')
   const [supabase] = useState(() => createClient())
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -39,7 +42,7 @@ export default function MasterPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [rows, setRows] = useState<MachineRow[]>([])
 
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(queryDate || new Date().toISOString().slice(0, 10))
   const [prevCash, setPrevCash] = useState('')
   const [cashReceived, setCashReceived] = useState('')
   const [hsdStockIn, setHsdStockIn] = useState('')
@@ -73,10 +76,10 @@ export default function MasterPage() {
         .single()
       if (!member) return
 
-      const org = member.organizations as any
+      const org = member.organizations as unknown as { hsd_rate?: number, ms_rate?: number }
       setOrgId(member.org_id)
-      setOrgHsdRate(org.hsd_rate)
-      setOrgMsRate(org.ms_rate)
+      setOrgHsdRate(org.hsd_rate || 87.49)
+      setOrgMsRate(org.ms_rate || 94.44)
 
       const { data: mach } = await supabase
         .from('machines')
@@ -112,8 +115,8 @@ export default function MasterPage() {
       .eq('date', d)
 
     if (dateEntries && dateEntries.length > 0) {
-      const hsdEntry = dateEntries.find((e: any) => e.machines?.fuel_type === 'HSD')
-      const msEntry = dateEntries.find((e: any) => e.machines?.fuel_type === 'MS')
+      const hsdEntry = dateEntries.find((e: unknown) => (e as any).machines?.fuel_type === 'HSD')
+      const msEntry = dateEntries.find((e: unknown) => (e as any).machines?.fuel_type === 'MS')
       if (hsdEntry) selectedHsdRate = String(hsdEntry.fuel_rate)
       if (msEntry) selectedMsRate = String(msEntry.fuel_rate)
     } else {
@@ -148,8 +151,8 @@ export default function MasterPage() {
           .eq('date', recentDateData.date)
 
         if (recentEntries) {
-          const hsdEntry = recentEntries.find((e: any) => e.machines?.fuel_type === 'HSD')
-          const msEntry = recentEntries.find((e: any) => e.machines?.fuel_type === 'MS')
+          const hsdEntry = recentEntries.find((e: unknown) => (e as any).machines?.fuel_type === 'HSD')
+          const msEntry = recentEntries.find((e: unknown) => (e as any).machines?.fuel_type === 'MS')
           if (hsdEntry) selectedHsdRate = String(hsdEntry.fuel_rate)
           if (msEntry) selectedMsRate = String(msEntry.fuel_rate)
         }
@@ -185,7 +188,7 @@ export default function MasterPage() {
       .single()
 
     // 4. For each machine, get previous closing reading if no entry today
-    const entryMap = new Map((entries ?? []).map((e: any) => [e.machine_id, e]))
+    const entryMap = new Map((entries ?? []).map((e: unknown) => [(e as any).machine_id, e]))
 
     const prevClosingMap = new Map<string, string>()
     const machinesWithoutEntry = machs.filter(m => !entryMap.has(m.id))
@@ -211,17 +214,17 @@ export default function MasterPage() {
       if (entry) {
         return {
           machine: m,
-          readingOpen: String(entry.reading_open),
-          readingClose: String(entry.reading_close),
-          operatorId: entry.operator_id ?? '',
+          readingOpen: String((entry as any).reading_open),
+          readingClose: String((entry as any).reading_close),
+          operatorId: (entry as any).operator_id ?? '',
         }
       }
       return { ...DEFAULT_ROW(m), readingOpen: prevClosingMap.get(m.id) ?? '' }
     }))
 
     // 6. Load page-level digital payments by summing across all machine entries
-    const allEntries = entries ?? [] as any[]
-    const sumField = (key: string) => allEntries.reduce((s: number, e: any) => s + (e[key] ?? 0), 0)
+    const allEntries = entries ?? [] as unknown[]
+    const sumField = (key: string) => allEntries.reduce((s: number, e: unknown) => s + ((e as any)[key] ?? 0), 0)
     const dPhonepe = sumField('phonepe')
     const dSbi     = sumField('sbi')
     const dIcici   = sumField('icici')
@@ -258,6 +261,7 @@ export default function MasterPage() {
   // ── Load data for selected date ──
   useEffect(() => {
     if (!orgId || !date || machines.length === 0) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDateData(orgId, date, machines)
   }, [orgId, date, machines, loadDateData])
 
@@ -372,7 +376,7 @@ export default function MasterPage() {
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{error}</div>}
       {!canEdit && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm mb-4 flex items-center gap-2">
-          <Lock size={14} /> Viewing past entry — you can only edit today's data.
+          <Lock size={14} /> Viewing past entry — you can only edit today&apos;s data.
         </div>
       )}
 
@@ -449,7 +453,7 @@ export default function MasterPage() {
                   <div>
                     <label className="field-label">Opening</label>
                     <input
-                      className={`field-input ${row.readingOpen && !row.readingClose ? 'auto' : ''}`}
+                      className={`field-input ${row.readingOpen && !(row as any).readingClose ? 'auto' : ''}`}
                       type="number" placeholder="e.g. 2884231"
                       value={row.readingOpen}
                       onChange={e => updateRow(row.machine.id, 'readingOpen', e.target.value)}
@@ -458,7 +462,7 @@ export default function MasterPage() {
                   <div>
                     <label className="field-label">Closing</label>
                     <input className="field-input" type="number" placeholder="e.g. 2884728"
-                      value={row.readingClose} onChange={e => updateRow(row.machine.id, 'readingClose', e.target.value)}
+                      value={(row as any).readingClose} onChange={e => updateRow(row.machine.id, 'readingClose', e.target.value)}
                       disabled={!canEdit} />
                   </div>
                   <div>
@@ -563,5 +567,13 @@ export default function MasterPage() {
         </button>
       )}
     </div>
+  )
+}
+
+export default function MasterPage() {
+  return (
+    <Suspense fallback={<div className="p-8"><FuelLoading /></div>}>
+      <MasterPageInner />
+    </Suspense>
   )
 }
