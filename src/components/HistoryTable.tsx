@@ -6,6 +6,7 @@ import { DailySummary } from '@/types'
 import { fmtInr } from '@/lib/calculations'
 import DailyDetails from './DailyDetails'
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   summaries: DailySummary[]
@@ -13,9 +14,11 @@ interface Props {
 }
 
 export default function HistoryTable({ summaries, orgId }: Props) {
+  const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [expTotals, setExpTotals] = useState<Record<string, number>>({})
   const [expandedDate, setExpandedDate] = useState<string | null>(null)
+
 
   useEffect(() => {
     const load = async () => {
@@ -93,7 +96,7 @@ export default function HistoryTable({ summaries, orgId }: Props) {
                     {isExpanded && (
                       <tr>
                         <td colSpan={7} className="p-0 border-b border-gray-100">
-                          <DailyDetails date={s.date} orgId={orgId} summary={s} />
+                          <DailyDetails date={s.date} orgId={orgId} summary={s} onSaved={() => router.refresh()} />
                         </td>
                       </tr>
                     )}

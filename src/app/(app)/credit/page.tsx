@@ -11,13 +11,13 @@ import { Trash2 } from 'lucide-react'
 
 type Tab = 'entry' | 'ledger' | 'summary'
 
-function CreditPageInner() {
+export function CreditForm({ inlineDate, onSaved }: { inlineDate?: string, onSaved?: () => void }) {
   const role = useRole()
   const isOwner = role === 'owner'
   const today = new Date().toISOString().slice(0, 10)
 
   const searchParams = useSearchParams()
-  const queryDate = searchParams.get('date')
+  const queryDate = inlineDate || searchParams.get('date')
   const [supabase] = useState(() => createClient())
   const [orgId, setOrgId] = useState('')
   const [userId, setUserId] = useState('')
@@ -70,10 +70,10 @@ function CreditPageInner() {
   }, [])
 
   // Auto-calc amount from liters
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!isPayment && form.liters) {
       const rate = form.fuelType === 'MS' ? msRate : hsdRate
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(f => ({ ...f, amount: String(calcCreditAmount(parseFloat(f.liters) || 0, rate)) }))
     }
   }, [form.liters, form.fuelType, isPayment, hsdRate, msRate])
@@ -100,6 +100,8 @@ function CreditPageInner() {
     if (!error && data) {
       setEntries(prev => [data, ...prev])
       setForm(f => ({ ...f, liters: '', amount: '', vehicleNo: '', receiptNo: '', defCash: '', notes: '' }))
+      await supabase.rpc('recalculate_ledger', { p_org_id: orgId, p_start_date: form.date })
+      if (onSaved) onSaved()
     }
     setSaving(false)
   }
@@ -367,7 +369,7 @@ function CreditPageInner() {
 export default function CreditPage() {
   return (
     <Suspense fallback={<div className="p-8"><FuelLoading /></div>}>
-      <CreditPageInner />
+      <CreditForm />
     </Suspense>
   )
 }
