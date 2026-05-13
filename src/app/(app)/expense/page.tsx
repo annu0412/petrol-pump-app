@@ -1,32 +1,45 @@
 
 'use client'
 import FuelLoading from '@/components/FuelLoading'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { Expense, EXPENSE_CATEGORIES } from '@/types'
 import { fmtInr } from '@/lib/calculations'
 import { useRole } from '@/lib/user-context'
 import { Trash2, Plus } from 'lucide-react'
 
-export default function ExpensePage() {
+function ExpensePageInner() {
   const role = useRole()
   const isOwner = role === 'owner'
   const today = new Date().toISOString().slice(0, 10)
 
+  const searchParams = useSearchParams()
+  const queryDate = searchParams.get('date')
   const [supabase] = useState(() => createClient())
   const [orgId, setOrgId] = useState('')
   const [userId, setUserId] = useState('')
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [filterDate, setFilterDate] = useState(today)
+  const [filterDate, setFilterDate] = useState(queryDate || today)
 
   const [form, setForm] = useState({
-    date: today,
+    date: queryDate || today,
     amount: '',
     category: 'Chai',
     comment: '',
   })
+
+async function fetchExpenses(oid: string, date: string) {
+    const { data } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('org_id', oid)
+      .eq('date', date)
+      .order('created_at', { ascending: false })
+    setExpenses(data ?? [])
+  }
 
   useEffect(() => {
     const init = async () => {
@@ -42,15 +55,7 @@ export default function ExpensePage() {
     init()
   }, [])
 
-  const fetchExpenses = async (oid: string, date: string) => {
-    const { data } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('org_id', oid)
-      .eq('date', date)
-      .order('created_at', { ascending: false })
-    setExpenses(data ?? [])
-  }
+
 
   const handleDateFilter = async (d: string) => {
     setFilterDate(d)
@@ -184,5 +189,13 @@ export default function ExpensePage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function ExpensePage() {
+  return (
+    <Suspense fallback={<div className="p-8"><FuelLoading /></div>}>
+      <ExpensePageInner />
+    </Suspense>
   )
 }

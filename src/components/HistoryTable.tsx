@@ -1,8 +1,11 @@
+
 'use client'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { DailySummary } from '@/types'
 import { fmtInr } from '@/lib/calculations'
+import DailyDetails from './DailyDetails'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 
 interface Props {
   summaries: DailySummary[]
@@ -12,6 +15,7 @@ interface Props {
 export default function HistoryTable({ summaries, orgId }: Props) {
   const [supabase] = useState(() => createClient())
   const [expTotals, setExpTotals] = useState<Record<string, number>>({})
+  const [expandedDate, setExpandedDate] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -30,7 +34,7 @@ export default function HistoryTable({ summaries, orgId }: Props) {
       setExpTotals(totals)
     }
     load()
-  }, [])
+  }, [orgId, summaries, supabase])
 
   const totalSale = summaries.reduce((s, r) => s + parseFloat(String(r.total_sale_inr ?? 0)), 0)
   const totalExp  = summaries.reduce((s, r) => s + (expTotals[r.date] ?? parseFloat(String(r.total_expense ?? 0))), 0)
@@ -53,6 +57,7 @@ export default function HistoryTable({ summaries, orgId }: Props) {
           <table className="data-table">
             <thead>
               <tr>
+                <th className="w-8"></th>
                 <th>Date</th>
                 <th>Total Sale</th>
                 <th>Digital</th>
@@ -63,20 +68,38 @@ export default function HistoryTable({ summaries, orgId }: Props) {
             </thead>
             <tbody>
               {!summaries.length && (
-                <tr><td colSpan={6} className="text-center py-10 text-gray-400 text-sm">No entries yet</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-gray-400 text-sm">No entries yet</td></tr>
               )}
-              {summaries.map(s => (
-                <tr key={s.id}>
-                  <td className="font-semibold text-sm">
-                    {new Date(s.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
-                  </td>
-                  <td className="num font-semibold text-[#003087]">{fmtInr(s.total_sale_inr)}</td>
-                  <td className="num text-blue-600">{fmtInr(s.total_digital)}</td>
-                  <td className="num text-amber-700">{fmtInr(expTotals[s.date] ?? s.total_expense)}</td>
-                  <td className="num text-red-600">{fmtInr(s.total_credit)}</td>
-                  <td className="num font-bold text-emerald-700">{fmtInr(s.cash_in_hand)}</td>
-                </tr>
-              ))}
+              {summaries.map(s => {
+                const isExpanded = expandedDate === s.date
+                return (
+                  <React.Fragment key={s.id}>
+                    <tr
+                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => setExpandedDate(isExpanded ? null : s.date)}
+                    >
+                      <td className="text-gray-400">
+                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                      </td>
+                      <td className="font-semibold text-sm">
+                        {new Date(s.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
+                      </td>
+                      <td className="num font-semibold text-[#003087]">{fmtInr(s.total_sale_inr)}</td>
+                      <td className="num text-blue-600">{fmtInr(s.total_digital)}</td>
+                      <td className="num text-amber-700">{fmtInr(expTotals[s.date] ?? s.total_expense)}</td>
+                      <td className="num text-red-600">{fmtInr(s.total_credit)}</td>
+                      <td className="num font-bold text-emerald-700">{fmtInr(s.cash_in_hand)}</td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={7} className="p-0 border-b border-gray-100">
+                          <DailyDetails date={s.date} orgId={orgId} summary={s} />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                )
+              })}
             </tbody>
           </table>
         </div>

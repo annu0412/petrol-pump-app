@@ -1,20 +1,23 @@
 
 'use client'
 import FuelLoading from '@/components/FuelLoading'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { Customer, CreditEntry } from '@/types'
 import { fmtInr, fmtL, calcCreditAmount } from '@/lib/calculations'
 import { useRole } from '@/lib/user-context'
-import { Trash2, Plus, Users, TrendingDown } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 
 type Tab = 'entry' | 'ledger' | 'summary'
 
-export default function CreditPage() {
+function CreditPageInner() {
   const role = useRole()
   const isOwner = role === 'owner'
   const today = new Date().toISOString().slice(0, 10)
 
+  const searchParams = useSearchParams()
+  const queryDate = searchParams.get('date')
   const [supabase] = useState(() => createClient())
   const [orgId, setOrgId] = useState('')
   const [userId, setUserId] = useState('')
@@ -28,7 +31,7 @@ export default function CreditPage() {
 
   const [isPayment, setIsPayment] = useState(false)
   const [form, setForm] = useState({
-    date: new Date().toISOString().slice(0, 10),
+    date: queryDate || new Date().toISOString().slice(0, 10),
     customerId: '',
     fuelType: 'HSD',
     liters: '',
@@ -51,9 +54,9 @@ export default function CreditPage() {
         .select('org_id, organizations(hsd_rate, ms_rate)')
         .eq('user_id', user.id).single()
       if (!member) return
-      const org = member.organizations as any
+      const org = member.organizations as unknown as { hsd_rate?: number, ms_rate?: number }
       setOrgId(member.org_id)
-      setHsdRate(org.hsd_rate); setMsRate(org.ms_rate)
+      setHsdRate(org.hsd_rate || 87.49); setMsRate(org.ms_rate || 94.44)
 
       const { data: custs } = await supabase.from('customers').select('*').eq('org_id', member.org_id).eq('is_active', true).order('name')
       const { data: ents } = await supabase.from('credit_entries').select('*, customers(name)').eq('org_id', member.org_id).order('date', { ascending: false }).order('created_at', { ascending: false })
@@ -67,6 +70,7 @@ export default function CreditPage() {
   }, [])
 
   // Auto-calc amount from liters
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!isPayment && form.liters) {
       const rate = form.fuelType === 'MS' ? msRate : hsdRate
@@ -288,7 +292,7 @@ export default function CreditPage() {
                 {filteredEntries.map(e => (
                   <tr key={e.id}>
                     <td className="text-xs">{e.date}</td>
-                    <td className="font-semibold text-sm">{(e.customer as any)?.name ?? '–'}</td>
+                    <td className="font-semibold text-sm">{(e.customer as unknown as {name?: string})?.name ?? '–'}</td>
                     <td>
                       {e.entry_type === 'sale'
                         ? <span className="badge-red badge">{e.fuel_type}</span>
@@ -357,5 +361,13 @@ export default function CreditPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function CreditPage() {
+  return (
+    <Suspense fallback={<div className="p-8"><FuelLoading /></div>}>
+      <CreditPageInner />
+    </Suspense>
   )
 }
