@@ -20,13 +20,13 @@ const DEFAULT_ROW = (m: Machine): MachineRow => ({
   machine: m, readingOpen: '', readingClose: '', operatorId: '',
 })
 
-function MasterPageInner() {
+export function MasterForm({ inlineDate, onSaved }: { inlineDate?: string, onSaved?: () => void }) {
   const role = useRole()
   const isOwner = role === 'owner'
   const today = new Date().toISOString().slice(0, 10)
 
   const searchParams = useSearchParams()
-  const queryDate = searchParams.get('date')
+  const queryDate = inlineDate || searchParams.get('date')
   const [supabase] = useState(() => createClient())
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -115,8 +115,8 @@ function MasterPageInner() {
       .eq('date', d)
 
     if (dateEntries && dateEntries.length > 0) {
-      const hsdEntry = dateEntries.find((e: unknown) => (e as any).machines?.fuel_type === 'HSD')
-      const msEntry = dateEntries.find((e: unknown) => (e as any).machines?.fuel_type === 'MS')
+      const hsdEntry = dateEntries.find((e: unknown) => (e as Record<string, any>).machines?.fuel_type === 'HSD')
+      const msEntry = dateEntries.find((e: unknown) => (e as Record<string, any>).machines?.fuel_type === 'MS')
       if (hsdEntry) selectedHsdRate = String(hsdEntry.fuel_rate)
       if (msEntry) selectedMsRate = String(msEntry.fuel_rate)
     } else {
@@ -151,8 +151,8 @@ function MasterPageInner() {
           .eq('date', recentDateData.date)
 
         if (recentEntries) {
-          const hsdEntry = recentEntries.find((e: unknown) => (e as any).machines?.fuel_type === 'HSD')
-          const msEntry = recentEntries.find((e: unknown) => (e as any).machines?.fuel_type === 'MS')
+          const hsdEntry = recentEntries.find((e: unknown) => (e as Record<string, any>).machines?.fuel_type === 'HSD')
+          const msEntry = recentEntries.find((e: unknown) => (e as Record<string, any>).machines?.fuel_type === 'MS')
           if (hsdEntry) selectedHsdRate = String(hsdEntry.fuel_rate)
           if (msEntry) selectedMsRate = String(msEntry.fuel_rate)
         }
@@ -188,7 +188,7 @@ function MasterPageInner() {
       .single()
 
     // 4. For each machine, get previous closing reading if no entry today
-    const entryMap = new Map((entries ?? []).map((e: unknown) => [(e as any).machine_id, e]))
+    const entryMap = new Map((entries ?? []).map((e: unknown) => [(e as Record<string, unknown>).machine_id, e]))
 
     const prevClosingMap = new Map<string, string>()
     const machinesWithoutEntry = machs.filter(m => !entryMap.has(m.id))
@@ -214,9 +214,9 @@ function MasterPageInner() {
       if (entry) {
         return {
           machine: m,
-          readingOpen: String((entry as any).reading_open),
-          readingClose: String((entry as any).reading_close),
-          operatorId: (entry as any).operator_id ?? '',
+          readingOpen: String((entry as Record<string, unknown>).reading_open),
+          readingClose: String((entry as Record<string, unknown>).reading_close),
+          operatorId: (entry as Record<string, any>).operator_id as string ?? '',
         }
       }
       return { ...DEFAULT_ROW(m), readingOpen: prevClosingMap.get(m.id) ?? '' }
@@ -224,7 +224,7 @@ function MasterPageInner() {
 
     // 6. Load page-level digital payments by summing across all machine entries
     const allEntries = entries ?? [] as unknown[]
-    const sumField = (key: string) => allEntries.reduce((s: number, e: unknown) => s + ((e as any)[key] ?? 0), 0)
+    const sumField = (key: string) => allEntries.reduce((s: number, e: unknown) => s + ((e as Record<string, any>)[key] as number ?? 0), 0)
     const dPhonepe = sumField('phonepe')
     const dSbi     = sumField('sbi')
     const dIcici   = sumField('icici')
@@ -358,6 +358,8 @@ function MasterPageInner() {
     }, { onConflict: 'org_id,date' })
 
     setSaving(false); setSaved(true)
+      await supabase.rpc('recalculate_ledger', { p_org_id: orgId, p_start_date: date })
+      if (onSaved) onSaved()
     setTimeout(() => setSaved(false), 3000)
   }
 
@@ -453,7 +455,7 @@ function MasterPageInner() {
                   <div>
                     <label className="field-label">Opening</label>
                     <input
-                      className={`field-input ${row.readingOpen && !(row as any).readingClose ? 'auto' : ''}`}
+                      className={`field-input ${row.readingOpen && !(row).readingClose ? 'auto' : ''}`}
                       type="number" placeholder="e.g. 2884231"
                       value={row.readingOpen}
                       onChange={e => updateRow(row.machine.id, 'readingOpen', e.target.value)}
@@ -462,7 +464,7 @@ function MasterPageInner() {
                   <div>
                     <label className="field-label">Closing</label>
                     <input className="field-input" type="number" placeholder="e.g. 2884728"
-                      value={(row as any).readingClose} onChange={e => updateRow(row.machine.id, 'readingClose', e.target.value)}
+                      value={(row).readingClose} onChange={e => updateRow(row.machine.id, 'readingClose', e.target.value)}
                       disabled={!canEdit} />
                   </div>
                   <div>
@@ -573,7 +575,7 @@ function MasterPageInner() {
 export default function MasterPage() {
   return (
     <Suspense fallback={<div className="p-8"><FuelLoading /></div>}>
-      <MasterPageInner />
+      <MasterForm />
     </Suspense>
   )
 }

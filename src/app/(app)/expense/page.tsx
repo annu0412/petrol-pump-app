@@ -9,13 +9,13 @@ import { fmtInr } from '@/lib/calculations'
 import { useRole } from '@/lib/user-context'
 import { Trash2, Plus } from 'lucide-react'
 
-function ExpensePageInner() {
+export function ExpenseForm({ inlineDate, onSaved }: { inlineDate?: string, onSaved?: () => void }) {
   const role = useRole()
   const isOwner = role === 'owner'
   const today = new Date().toISOString().slice(0, 10)
 
   const searchParams = useSearchParams()
-  const queryDate = searchParams.get('date')
+  const queryDate = inlineDate || searchParams.get('date')
   const [supabase] = useState(() => createClient())
   const [orgId, setOrgId] = useState('')
   const [userId, setUserId] = useState('')
@@ -195,7 +195,7 @@ async function fetchExpenses(oid: string, date: string) {
 export default function ExpensePage() {
   return (
     <Suspense fallback={<div className="p-8"><FuelLoading /></div>}>
-      <ExpensePageInner />
+      <ExpenseForm />
     </Suspense>
   )
 }
