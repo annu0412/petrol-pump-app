@@ -324,6 +324,7 @@ export function MasterForm({ inlineDate, onSaved }: { inlineDate?: string, onSav
         paytm:   isFirst ? n(paytm)   : 0,
         dt_plus: isFirst ? n(dtPlus)  : 0,
         neft:    isFirst ? n(neft)    : 0,
+        total_digital: isFirst ? (n(phonepe) + n(sbi) + n(icici) + n(paytm) + n(dtPlus) + n(neft)) : 0,
         hsd_stock_in: n(hsdStockIn),
         ms_stock_in: n(msStockIn),
         notes: notes || null,

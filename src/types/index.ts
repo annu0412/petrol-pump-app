@@ -85,6 +85,7 @@ export interface MasterEntry {
   paytm: number
   dt_plus: number
   neft: number
+  total_digital: number
   additive: number
   def_liters: number
   hsd_stock_in: number
