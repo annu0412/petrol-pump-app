@@ -77,7 +77,6 @@ async function fetchExpenses(oid: string, date: string) {
     if (!error && data) {
       if (form.date === filterDate) setExpenses(prev => [data, ...prev])
       setForm(f => ({ ...f, amount: '', comment: '' }))
-      await supabase.rpc('recalculate_ledger', { p_org_id: orgId, p_start_date: form.date })
       if (onSaved) onSaved()
     }
     setSaving(false)
@@ -86,7 +85,6 @@ async function fetchExpenses(oid: string, date: string) {
   const handleDelete = async (id: string) => {
     await supabase.from('expenses').delete().eq('id', id)
     setExpenses(prev => prev.filter(e => e.id !== id))
-    await supabase.rpc('recalculate_ledger', { p_org_id: orgId, p_start_date: filterDate })
     if (onSaved) onSaved()
   }
 

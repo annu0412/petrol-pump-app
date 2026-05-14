@@ -115,8 +115,8 @@ export function MasterForm({ inlineDate, onSaved }: { inlineDate?: string, onSav
       .eq('date', d)
 
     if (dateEntries && dateEntries.length > 0) {
-      const hsdEntry = dateEntries.find((e: unknown) => (e as Record<string, any>).machines?.fuel_type === 'HSD')
-      const msEntry = dateEntries.find((e: unknown) => (e as Record<string, any>).machines?.fuel_type === 'MS')
+      const hsdEntry = dateEntries.find((e: unknown) => (e as { machines?: { fuel_type: string } }).machines?.fuel_type === 'HSD')
+      const msEntry = dateEntries.find((e: unknown) => (e as { machines?: { fuel_type: string } }).machines?.fuel_type === 'MS')
       if (hsdEntry) selectedHsdRate = String(hsdEntry.fuel_rate)
       if (msEntry) selectedMsRate = String(msEntry.fuel_rate)
     } else {
@@ -151,8 +151,8 @@ export function MasterForm({ inlineDate, onSaved }: { inlineDate?: string, onSav
           .eq('date', recentDateData.date)
 
         if (recentEntries) {
-          const hsdEntry = recentEntries.find((e: unknown) => (e as Record<string, any>).machines?.fuel_type === 'HSD')
-          const msEntry = recentEntries.find((e: unknown) => (e as Record<string, any>).machines?.fuel_type === 'MS')
+          const hsdEntry = recentEntries.find((e: unknown) => (e as { machines?: { fuel_type: string } }).machines?.fuel_type === 'HSD')
+          const msEntry = recentEntries.find((e: unknown) => (e as { machines?: { fuel_type: string } }).machines?.fuel_type === 'MS')
           if (hsdEntry) selectedHsdRate = String(hsdEntry.fuel_rate)
           if (msEntry) selectedMsRate = String(msEntry.fuel_rate)
         }
@@ -188,7 +188,7 @@ export function MasterForm({ inlineDate, onSaved }: { inlineDate?: string, onSav
       .single()
 
     // 4. For each machine, get previous closing reading if no entry today
-    const entryMap = new Map((entries ?? []).map((e: unknown) => [(e as Record<string, unknown>).machine_id, e]))
+    const entryMap = new Map((entries ?? []).map((e: unknown) => [(e as { machine_id: string }).machine_id, e]))
 
     const prevClosingMap = new Map<string, string>()
     const machinesWithoutEntry = machs.filter(m => !entryMap.has(m.id))
@@ -214,9 +214,9 @@ export function MasterForm({ inlineDate, onSaved }: { inlineDate?: string, onSav
       if (entry) {
         return {
           machine: m,
-          readingOpen: String((entry as Record<string, unknown>).reading_open),
-          readingClose: String((entry as Record<string, unknown>).reading_close),
-          operatorId: (entry as Record<string, any>).operator_id as string ?? '',
+          readingOpen: String((entry as { reading_open: string }).reading_open),
+          readingClose: String((entry as { reading_close: string }).reading_close),
+          operatorId: (entry as { operator_id: string }).operator_id as string ?? '',
         }
       }
       return { ...DEFAULT_ROW(m), readingOpen: prevClosingMap.get(m.id) ?? '' }
@@ -224,7 +224,7 @@ export function MasterForm({ inlineDate, onSaved }: { inlineDate?: string, onSav
 
     // 6. Load page-level digital payments by summing across all machine entries
     const allEntries = entries ?? [] as unknown[]
-    const sumField = (key: string) => allEntries.reduce((s: number, e: unknown) => s + ((e as Record<string, any>)[key] as number ?? 0), 0)
+    const sumField = (key: string) => allEntries.reduce((s: number, e: unknown) => s + ((e as Record<string, number>)[key] ?? 0), 0)
     const dPhonepe = sumField('phonepe')
     const dSbi     = sumField('sbi')
     const dIcici   = sumField('icici')
@@ -359,7 +359,6 @@ export function MasterForm({ inlineDate, onSaved }: { inlineDate?: string, onSav
     }, { onConflict: 'org_id,date' })
 
     setSaving(false); setSaved(true)
-      await supabase.rpc('recalculate_ledger', { p_org_id: orgId, p_start_date: date })
       if (onSaved) onSaved()
     setTimeout(() => setSaved(false), 3000)
   }
