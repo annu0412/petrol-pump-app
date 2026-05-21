@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rupali HP Sales - Petrol Pump Management System
+
+Rupali HP is a multi-tenant Petrol Pump Management System designed for tracking daily operations, fuel rates, machine meter readings, sales, expenses, and credit. It is built as a Progressive Web App (PWA) to streamline daily data entry and provide clear reporting.
+
+## Features
+
+- **Multi-Tenant Architecture**: Robust organization management allowing separate organizations to manage their own data securely.
+- **Daily Operations Tracking**: Daily meter entry forms for machines that automatically load the opening reading from the previous day's closing reading.
+- **Expense & Credit Management**: Track daily expenses, credit sales, and customer payments easily.
+- **History & Reporting**: View up to 60-day summaries of operations and sales.
+- **Settings & Configuration**: Easily manage organization details, machines, employees, and customers.
+- **Secure Authentication**: Utilizing Supabase Auth with an intuitive multi-step registration flow.
+- **PWA Support**: Installable as a Progressive Web App for quick access on mobile devices.
+
+## Tech Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Backend & Auth**: [Supabase](https://supabase.com/) (PostgreSQL with RLS, Supabase Auth)
+- **Testing**: Built-in Node.js test runner (`node --test`)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js (v20+ recommended)
+- A Supabase Project
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository and install dependencies:
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Set up your environment variables. Create a `.env.local` file in the project root:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-## Learn More
+3. Set up the Database:
+   - Go to your Supabase SQL Editor.
+   - Run the migration files located in `supabase/migrations/` (or refer to `supabase/SUPABASE_SQL_README.md`) in order:
+     - `001_schema.sql`
+     - `002_rls.sql`
+     - `003` (Registration RLS)
+     - `004` (register_org RPC)
+     - `005` (Tightened RLS)
+   - Ensure "Confirm email" is turned OFF in Supabase Auth > Providers > Email.
 
-To learn more about Next.js, take a look at the following resources:
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Development Notes
 
-## Deploy on Vercel
+- **Next.js 16**: This project uses Next.js 16 which may contain breaking changes from earlier versions. Refer to Next.js documentation as needed.
+- **Tailwind CSS v4**: This project uses Tailwind v4 which does not use a `tailwind.config` file. It utilizes `@import "tailwindcss"` directly.
+- **Testing**: Run unit tests with zero dependencies using `node --experimental-strip-types --test`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Private / Proprietary
