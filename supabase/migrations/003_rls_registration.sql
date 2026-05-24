@@ -6,14 +6,9 @@
 -- initial setup inserts for authenticated users.
 
 -- Allow any authenticated user to create an org
-create policy "authenticated users can create an org"
-  on public.organizations for insert
-  with check (auth.uid() is not null);
-
--- Allow any authenticated user to insert themselves as org member
-create policy "authenticated users can join as owner on insert"
-  on public.org_members for insert
-  with check (auth.uid() is not null and user_id = auth.uid());
+-- Note: Direct inserts to organizations and org_members are no longer allowed
+-- for any authenticated user to prevent arbitrary data creation.
+-- The RPC `register_org` handles this securely as it runs as SECURITY DEFINER.
 
 -- Allow new org owners to insert machines during registration
 create policy "members can insert machines"
